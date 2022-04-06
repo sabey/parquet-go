@@ -5,10 +5,10 @@ import (
 	"math/bits"
 
 	"github.com/apache/thrift/lib/go/thrift"
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/compress"
-	"github.com/xitongsys/parquet-go/encoding"
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/sabey/parquet-go/common"
+	"github.com/sabey/parquet-go/compress"
+	"github.com/sabey/parquet-go/encoding"
+	"github.com/sabey/parquet-go/parquet"
 )
 
 type DictRecType struct {

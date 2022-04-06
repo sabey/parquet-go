@@ -1,12 +1,12 @@
 package schema
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/pkg/errors"
+	"github.com/sabey/parquet-go/common"
+	"github.com/sabey/parquet-go/parquet"
 )
 
 /*

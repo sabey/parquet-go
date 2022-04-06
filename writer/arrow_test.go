@@ -8,10 +8,10 @@ import (
 	"github.com/apache/arrow/go/arrow"
 	"github.com/apache/arrow/go/arrow/array"
 	"github.com/apache/arrow/go/arrow/memory"
+	"github.com/sabey/parquet-go-source/buffer"
+	"github.com/sabey/parquet-go-source/writerfile"
+	"github.com/sabey/parquet-go/reader"
 	"github.com/stretchr/testify/assert"
-	"github.com/xitongsys/parquet-go-source/buffer"
-	"github.com/xitongsys/parquet-go-source/writerfile"
-	"github.com/xitongsys/parquet-go/reader"
 )
 
 // testSchema is schema for the testint table which covers all

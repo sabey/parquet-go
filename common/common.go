@@ -3,7 +3,6 @@ package common
 import (
 	"bytes"
 	"encoding/gob"
-	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -11,8 +10,9 @@ import (
 
 	"github.com/apache/arrow/go/arrow"
 	"github.com/apache/arrow/go/arrow/array"
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/types"
+	"github.com/pkg/errors"
+	"github.com/sabey/parquet-go/parquet"
+	"github.com/sabey/parquet-go/types"
 )
 
 // `parquet:"name=Name, type=FIXED_LEN_BYTE_ARRAY, length=12"`

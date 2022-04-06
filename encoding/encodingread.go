@@ -7,7 +7,7 @@ import (
 	"io"
 	"math"
 
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/sabey/parquet-go/parquet"
 )
 
 func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, cnt uint64, bitWidth uint64) ([]interface{}, error) {

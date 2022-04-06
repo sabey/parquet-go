@@ -1,13 +1,13 @@
 package layout
 
 import (
-	"errors"
 	"sync"
 
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/schema"
-	"github.com/xitongsys/parquet-go/source"
+	"github.com/pkg/errors"
+	"github.com/sabey/parquet-go/common"
+	"github.com/sabey/parquet-go/parquet"
+	"github.com/sabey/parquet-go/schema"
+	"github.com/sabey/parquet-go/source"
 )
 
 //RowGroup stores the RowGroup in parquet file

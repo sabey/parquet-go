@@ -6,10 +6,11 @@ import (
 	"bytes"
 	"context"
 	"database/sql/driver"
-	"errors"
 	"fmt"
-	"github.com/apache/thrift/lib/go/thrift"
 	"time"
+	
+	"github.com/pkg/errors"
+	"github.com/apache/thrift/lib/go/thrift"
 )
 
 // (needed to ensure safety because of naive import list construction.)

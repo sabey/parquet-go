@@ -2,11 +2,11 @@ package schema
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/pkg/errors"
+	"github.com/sabey/parquet-go/common"
+	"github.com/sabey/parquet-go/parquet"
 )
 
 type JSONSchemaItemType struct {

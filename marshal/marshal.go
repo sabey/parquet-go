@@ -1,15 +1,15 @@
 package marshal
 
 import (
-	"errors"
 	"reflect"
 	"strings"
 
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/layout"
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/schema"
-	"github.com/xitongsys/parquet-go/types"
+	"github.com/pkg/errors"
+	"github.com/sabey/parquet-go/common"
+	"github.com/sabey/parquet-go/layout"
+	"github.com/sabey/parquet-go/parquet"
+	"github.com/sabey/parquet-go/schema"
+	"github.com/sabey/parquet-go/types"
 )
 
 type Node struct {

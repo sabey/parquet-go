@@ -4,6 +4,6 @@ test:
 	go test -v -cover ${PACKAGES}
 
 format:
-	go fmt github.com/xitongsys/parquet-go/...
+	go fmt github.com/sabey/parquet-go/...
 
 .PHONEY: test

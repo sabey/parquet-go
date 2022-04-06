@@ -5,10 +5,11 @@ package compress
 
 import (
 	"bytes"
-	"github.com/klauspost/compress/gzip"
-	"github.com/xitongsys/parquet-go/parquet"
 	"io/ioutil"
 	"sync"
+
+	"github.com/klauspost/compress/gzip"
+	"github.com/sabey/parquet-go/parquet"
 )
 
 var gzipWriterPool sync.Pool

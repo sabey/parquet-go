@@ -3,8 +3,8 @@ package schema
 import (
 	"fmt"
 
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/sabey/parquet-go/common"
+	"github.com/sabey/parquet-go/parquet"
 )
 
 //Create a schema handler from CSV metadata

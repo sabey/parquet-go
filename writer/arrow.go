@@ -5,12 +5,12 @@ import (
 
 	"github.com/apache/arrow/go/arrow"
 	"github.com/apache/arrow/go/arrow/array"
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/layout"
-	"github.com/xitongsys/parquet-go/marshal"
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/schema"
-	"github.com/xitongsys/parquet-go/source"
+	"github.com/sabey/parquet-go/common"
+	"github.com/sabey/parquet-go/layout"
+	"github.com/sabey/parquet-go/marshal"
+	"github.com/sabey/parquet-go/parquet"
+	"github.com/sabey/parquet-go/schema"
+	"github.com/sabey/parquet-go/source"
 )
 
 const (

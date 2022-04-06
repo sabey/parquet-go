@@ -13,13 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-
-	"github.com/xitongsys/parquet-go-source/local"
-	"github.com/xitongsys/parquet-go-source/s3"
-	"github.com/xitongsys/parquet-go/reader"
-	"github.com/xitongsys/parquet-go/source"
-	"github.com/xitongsys/parquet-go/tool/parquet-tools/schematool"
-	"github.com/xitongsys/parquet-go/tool/parquet-tools/sizetool"
+	"github.com/sabey/parquet-go-source/local"
+	"github.com/sabey/parquet-go-source/s3"
+	"github.com/sabey/parquet-go/reader"
+	"github.com/sabey/parquet-go/source"
+	"github.com/sabey/parquet-go/tool/parquet-tools/schematool"
+	"github.com/sabey/parquet-go/tool/parquet-tools/sizetool"
 )
 
 func main() {

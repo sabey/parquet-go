@@ -1,10 +1,9 @@
 package writer
 
 import (
-	"fmt"
-
 	"github.com/apache/arrow/go/arrow"
 	"github.com/apache/arrow/go/arrow/array"
+	"github.com/pkg/errors"
 	"github.com/sabey/parquet-go/common"
 	"github.com/sabey/parquet-go/layout"
 	"github.com/sabey/parquet-go/marshal"
@@ -35,8 +34,7 @@ func NewArrowWriter(arrowSchema *arrow.Schema, pfile source.ParquetFile,
 	res := new(ArrowWriter)
 	res.SchemaHandler, err = schema.NewSchemaHandlerFromArrow(arrowSchema)
 	if err != nil {
-		return res, fmt.Errorf("Unable to create schema from arrow definition: %s",
-			err.Error())
+		return res, errors.Wrap(err, "schema.NewSchemaHandlerFromArrow")
 	}
 
 	res.PFile = pfile
@@ -54,7 +52,10 @@ func NewArrowWriter(arrowSchema *arrow.Schema, pfile source.ParquetFile,
 	res.Offset = offset
 	_, err = res.PFile.Write([]byte("PAR1"))
 	res.MarshalFunc = marshal.MarshalArrow
-	return res, err
+	if err != nil {
+		return res, errors.Wrap(err, "res.PFile.Write")
+	}
+	return res, nil
 }
 
 // WriteArrow wraps the base Write function provided by writer.ParquetWriter.
@@ -71,7 +72,7 @@ func (w *ArrowWriter) WriteArrow(record array.Record) error {
 			w.SchemaHandler.SchemaElements[i+1])
 
 		if err != nil {
-			return err
+			return errors.Wrap(err, "common.ArrowColToParquetCol")
 		}
 
 		if len(columnFromRecord) > 0 {
@@ -82,7 +83,7 @@ func (w *ArrowWriter) WriteArrow(record array.Record) error {
 	for _, row := range transposedTable {
 		err := w.Write(row)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "w.Write")
 		}
 	}
 	return nil

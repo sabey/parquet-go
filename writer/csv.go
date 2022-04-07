@@ -1,9 +1,9 @@
 package writer
 
 import (
-	"fmt"
 	"io"
 
+	"github.com/pkg/errors"
 	"github.com/sabey/parquet-go-source/writerfile"
 	"github.com/sabey/parquet-go/layout"
 	"github.com/sabey/parquet-go/marshal"
@@ -19,7 +19,11 @@ type CSVWriter struct {
 
 func NewCSVWriterFromWriter(md []string, w io.Writer, np int64) (*CSVWriter, error) {
 	wf := writerfile.NewWriterFile(w)
-	return NewCSVWriter(md, wf, np)
+	cw, err := NewCSVWriter(md, wf, np)
+	if err != nil {
+		return cw, errors.Wrap(err, "NewCSVWriter")
+	}
+	return cw, nil
 }
 
 //Create CSV writer
@@ -28,7 +32,7 @@ func NewCSVWriter(md []string, pfile source.ParquetFile, np int64) (*CSVWriter, 
 	res := new(CSVWriter)
 	res.SchemaHandler, err = schema.NewSchemaHandlerFromMetadata(md)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create schema from metadata: %s", err.Error())
+		return nil, errors.Wrap(err, "schema.NewSchemaHandlerFromMetadata")
 	}
 	res.PFile = pfile
 	res.PageSize = 8 * 1024              //8K
@@ -43,7 +47,10 @@ func NewCSVWriter(md []string, pfile source.ParquetFile, np int64) (*CSVWriter, 
 	res.Offset = 4
 	_, err = res.PFile.Write([]byte("PAR1"))
 	res.MarshalFunc = marshal.MarshalCSV
-	return res, err
+	if err != nil {
+		return res, errors.Wrap(err, "res.PFile.Write")
+	}
+	return res, nil
 }
 
 //Write string values to parquet file
@@ -62,10 +69,13 @@ func (w *CSVWriter) WriteString(recsi interface{}) error {
 				int(w.SchemaHandler.SchemaElements[i+1].GetScale()),
 			)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "types.StrToParquetType")
 			}
 		}
 	}
 
-	return w.Write(rec)
+	if err := w.Write(rec); err != nil {
+		return errors.Wrap(err, "w.Write")
+	}
+	return nil
 }

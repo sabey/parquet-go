@@ -2,6 +2,7 @@ package layout
 
 import (
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/pkg/errors"
 	"github.com/sabey/parquet-go/common"
 	"github.com/sabey/parquet-go/encoding"
 	"github.com/sabey/parquet-go/parquet"
@@ -174,7 +175,7 @@ func ReadChunk(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.Sc
 	for readValues < numValues {
 		page, cnt, _, err := ReadPage(thriftReader, schemaHandler, chunkHeader.GetMetaData())
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "ReadPage")
 		}
 		chunk.Pages = append(chunk.Pages, page)
 		readValues += cnt

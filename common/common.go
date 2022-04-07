@@ -83,7 +83,7 @@ func StringToTag(tag string) (*Tag, error) {
 
 		kv := strings.SplitN(tag, "=", 2)
 		if len(kv) != 2 {
-			return nil, fmt.Errorf("expect 'key=value' but got '%s'", tag)
+			return nil, errors.Errorf("expect 'key=value' but got '%s'", tag)
 		}
 		key := kv[0]
 		key = strings.ToLower(key)
@@ -108,63 +108,63 @@ func StringToTag(tag string) (*Tag, error) {
 			mp.ValueConvertedType = val
 		case "length":
 			if mp.Length, err = Str2Int32(val); err != nil {
-				return nil, fmt.Errorf("failed to parse length: %s", err.Error())
+				return nil, errors.Wrap(err, "failed to parse length")
 			}
 		case "keylength":
 			if mp.KeyLength, err = Str2Int32(val); err != nil {
-				return nil, fmt.Errorf("failed to parse keylength: %s", err.Error())
+				return nil, errors.Wrap(err, "failed to parse keylength")
 			}
 		case "valuelength":
 			if mp.ValueLength, err = Str2Int32(val); err != nil {
-				return nil, fmt.Errorf("failed to parse valuelength: %s", err.Error())
+				return nil, errors.Wrap(err, "failed to parse valuelength")
 			}
 		case "scale":
 			if mp.Scale, err = Str2Int32(val); err != nil {
-				return nil, fmt.Errorf("failed to parse scale: %s", err.Error())
+				return nil, errors.Wrap(err, "failed to parse scale")
 			}
 		case "keyscale":
 			if mp.KeyScale, err = Str2Int32(val); err != nil {
-				return nil, fmt.Errorf("failed to parse keyscale: %s", err.Error())
+				return nil, errors.Wrap(err, "failed to parse keyscale")
 			}
 		case "valuescale":
 			if mp.ValueScale, err = Str2Int32(val); err != nil {
-				return nil, fmt.Errorf("failed to parse valuescale: %s", err.Error())
+				return nil, errors.Wrap(err, "failed to parse valuescale")
 			}
 		case "precision":
 			if mp.Precision, err = Str2Int32(val); err != nil {
-				return nil, fmt.Errorf("failed to parse precision: %s", err.Error())
+				return nil, errors.Wrap(err, "failed to parse precision")
 			}
 		case "keyprecision":
 			if mp.KeyPrecision, err = Str2Int32(val); err != nil {
-				return nil, fmt.Errorf("failed to parse keyprecision: %s", err.Error())
+				return nil, errors.Wrap(err, "failed to parse keyprecision")
 			}
 		case "valueprecision":
 			if mp.ValuePrecision, err = Str2Int32(val); err != nil {
-				return nil, fmt.Errorf("failed to parse valueprecision: %s", err.Error())
+				return nil, errors.Wrap(err, "failed to parse valueprecision")
 			}
 		case "fieldid":
 			if mp.FieldID, err = Str2Int32(val); err != nil {
-				return nil, fmt.Errorf("failed to parse fieldid: %s", err.Error())
+				return nil, errors.Wrap(err, "failed to parse fieldid")
 			}
 		case "keyfieldid":
 			if mp.KeyFieldID, err = Str2Int32(val); err != nil {
-				return nil, fmt.Errorf("failed to parse keyfieldid: %s", err.Error())
+				return nil, errors.Wrap(err, "failed to parse keyfieldid")
 			}
 		case "valuefieldid":
 			if mp.ValueFieldID, err = Str2Int32(val); err != nil {
-				return nil, fmt.Errorf("failed to parse valuefieldid: %s", err.Error())
+				return nil, errors.Wrap(err, "failed to parse valuefieldid")
 			}
 		case "isadjustedtoutc":
 			if mp.IsAdjustedToUTC, err = Str2Bool(val); err != nil {
-				return nil, fmt.Errorf("failed to parse isadjustedtoutc: %s", err.Error())
+				return nil, errors.Wrap(err, "failed to parse isadjustedtoutc")
 			}
 		case "keyisadjustedtoutc":
 			if mp.KeyIsAdjustedToUTC, err = Str2Bool(val); err != nil {
-				return nil, fmt.Errorf("failed to parse keyisadjustedtoutc: %s", err.Error())
+				return nil, errors.Wrap(err, "failed to parse keyisadjustedtoutc")
 			}
 		case "valueisadjustedtoutc":
 			if mp.ValueIsAdjustedToUTC, err = Str2Bool(val); err != nil {
-				return nil, fmt.Errorf("failed to parse valueisadjustedtoutc: %s", err.Error())
+				return nil, errors.Wrap(err, "failed to parse valueisadjustedtoutc")
 			}
 		case "name":
 			if mp.InName == "" {
@@ -175,15 +175,15 @@ func StringToTag(tag string) (*Tag, error) {
 			mp.InName = val
 		case "omitstats":
 			if mp.OmitStats, err = Str2Bool(val); err != nil {
-				return nil, fmt.Errorf("failed to parse omitstats: %s", err.Error())
+				return nil, errors.Wrap(err, "failed to parse omitstats")
 			}
 		case "keyomitstats":
 			if mp.KeyOmitStats, err = Str2Bool(val); err != nil {
-				return nil, fmt.Errorf("failed to parse keyomitstats: %s", err.Error())
+				return nil, errors.Wrap(err, "failed to parse keyomitstats")
 			}
 		case "valueomitstats":
 			if mp.ValueOmitStats, err = Str2Bool(val); err != nil {
-				return nil, fmt.Errorf("failed to parse valueomitstats: %s", err.Error())
+				return nil, errors.Wrap(err, "failed to parse valueomitstats")
 			}
 		case "repetitiontype":
 			switch strings.ToLower(val) {
@@ -194,7 +194,7 @@ func StringToTag(tag string) (*Tag, error) {
 			case "optional":
 				mp.RepetitionType = parquet.FieldRepetitionType_OPTIONAL
 			default:
-				return nil, fmt.Errorf("unknown repetitiontype: '%v'", val)
+				return nil, errors.Errorf("unknown repetitiontype: '%v'", val)
 			}
 		case "keyrepetitiontype":
 			switch strings.ToLower(val) {
@@ -205,7 +205,7 @@ func StringToTag(tag string) (*Tag, error) {
 			case "optional":
 				mp.KeyRepetitionType = parquet.FieldRepetitionType_OPTIONAL
 			default:
-				return nil, fmt.Errorf("unknown keyrepetitiontype: '%v'", val)
+				return nil, errors.Errorf("unknown keyrepetitiontype: '%v'", val)
 			}
 		case "valuerepetitiontype":
 			switch strings.ToLower(val) {
@@ -216,7 +216,7 @@ func StringToTag(tag string) (*Tag, error) {
 			case "optional":
 				mp.ValueRepetitionType = parquet.FieldRepetitionType_OPTIONAL
 			default:
-				return nil, fmt.Errorf("unknown valuerepetitiontype: '%v'", val)
+				return nil, errors.Errorf("unknown valuerepetitiontype: '%v'", val)
 			}
 		case "encoding":
 			switch strings.ToLower(val) {
@@ -237,7 +237,7 @@ func StringToTag(tag string) (*Tag, error) {
 			case "byte_stream_split":
 				mp.Encoding = parquet.Encoding_BYTE_STREAM_SPLIT
 			default:
-				return nil, fmt.Errorf("unknown encoding type: '%v'", val)
+				return nil, errors.Errorf("unknown encoding type: '%v'", val)
 			}
 		case "keyencoding":
 			switch strings.ToLower(val) {
@@ -254,7 +254,7 @@ func StringToTag(tag string) (*Tag, error) {
 			case "byte_stream_split":
 				mp.KeyEncoding = parquet.Encoding_BYTE_STREAM_SPLIT
 			default:
-				return nil, fmt.Errorf("unknown keyencoding type: '%v'", val)
+				return nil, errors.Errorf("unknown keyencoding type: '%v'", val)
 			}
 		case "valueencoding":
 			switch strings.ToLower(val) {
@@ -271,7 +271,7 @@ func StringToTag(tag string) (*Tag, error) {
 			case "byte_stream_split":
 				mp.ValueEncoding = parquet.Encoding_BYTE_STREAM_SPLIT
 			default:
-				return nil, fmt.Errorf("unknown valueencoding type: '%v'", val)
+				return nil, errors.Errorf("unknown valueencoding type: '%v'", val)
 			}
 		default:
 			if strings.HasPrefix(key, "logicaltype") {
@@ -283,7 +283,7 @@ func StringToTag(tag string) (*Tag, error) {
 				newKey := key[5:]
 				mp.ValueLogicalTypeFields[newKey] = val
 			} else {
-				return nil, fmt.Errorf("unrecognized tag '%v'", key)
+				return nil, errors.Errorf("unrecognized tag '%v'", key)
 			}
 		}
 	}
@@ -304,7 +304,7 @@ func NewSchemaElementFromTagMap(info *Tag) (*parquet.SchemaElement, error) {
 		schema.Type = &t
 
 	} else {
-		return nil, fmt.Errorf("type " + info.Type + ": " + err.Error())
+		return nil, errors.Wrap(err, "parquet.TypeFromString")
 	}
 
 	if ct, err := parquet.ConvertedTypeFromString(info.ConvertedType); err == nil {
@@ -316,7 +316,7 @@ func NewSchemaElementFromTagMap(info *Tag) (*parquet.SchemaElement, error) {
 	if len(info.LogicalTypeFields) > 0 {
 		logicalType, err = NewLogicalTypeFromFieldsMap(info.LogicalTypeFields)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create logicaltype from field map: %s", err.Error())
+			return nil, errors.Wrap(err, "failed to create logicaltype from field map")
 		}
 	} else {
 		logicalType = NewLogicalTypeFromConvertedType(schema, info)
@@ -347,11 +347,11 @@ func NewLogicalTypeFromFieldsMap(mp map[string]string) (*parquet.LogicalType, er
 			logicalType.DECIMAL = parquet.NewDecimalType()
 			logicalType.DECIMAL.Precision, err = Str2Int32(mp["logicaltype.precision"])
 			if err != nil {
-				return nil, fmt.Errorf("cannot parse logicaltype.precision as int32: %s", err.Error())
+				return nil, errors.Wrap(err, "cannot parse logicaltype.precision as int32")
 			}
 			logicalType.DECIMAL.Scale, err = Str2Int32(mp["logicaltype.scale"])
 			if err != nil {
-				return nil, fmt.Errorf("cannot parse logicaltype.scale as int32: %s", err.Error())
+				return nil, errors.Wrap(err, "cannot parse logicaltype.scale as int32")
 			}
 
 		case "DATE":
@@ -361,7 +361,7 @@ func NewLogicalTypeFromFieldsMap(mp map[string]string) (*parquet.LogicalType, er
 			logicalType.TIME = parquet.NewTimeType()
 			logicalType.TIME.IsAdjustedToUTC, err = Str2Bool(mp["logicaltype.isadjustedtoutc"])
 			if err != nil {
-				return nil, fmt.Errorf("cannot parse logicaltype.isadjustedtoutc as boolean: %s", err.Error())
+				return nil, errors.Wrap(err, "cannot parse logicaltype.isadjustedtoutc as boolean")
 			}
 			switch mp["logicaltype.unit"] {
 			case "MILLIS":
@@ -374,14 +374,14 @@ func NewLogicalTypeFromFieldsMap(mp map[string]string) (*parquet.LogicalType, er
 				logicalType.TIME.Unit = parquet.NewTimeUnit()
 				logicalType.TIME.Unit.NANOS = parquet.NewNanoSeconds()
 			default:
-				return nil, fmt.Errorf("logicaltype time error, unknown unit: %s", mp["logicaltype.unit"])
+				return nil, errors.Errorf("logicaltype time error, unknown unit: %s", mp["logicaltype.unit"])
 			}
 
 		case "TIMESTAMP":
 			logicalType.TIMESTAMP = parquet.NewTimestampType()
 			logicalType.TIMESTAMP.IsAdjustedToUTC, err = Str2Bool(mp["logicaltype.isadjustedtoutc"])
 			if err != nil {
-				return nil, fmt.Errorf("cannot parse logicaltype.isadjustedtoutc as boolean: %s", err.Error())
+				return nil, errors.Wrap(err, "cannot parse logicaltype.isadjustedtoutc as boolean")
 			}
 			switch mp["logicaltype.unit"] {
 			case "MILLIS":
@@ -394,19 +394,19 @@ func NewLogicalTypeFromFieldsMap(mp map[string]string) (*parquet.LogicalType, er
 				logicalType.TIMESTAMP.Unit = parquet.NewTimeUnit()
 				logicalType.TIMESTAMP.Unit.NANOS = parquet.NewNanoSeconds()
 			default:
-				return nil, fmt.Errorf("logicaltype time error, unknown unit: %s", mp["logicaltype.unit"])
+				return nil, errors.Errorf("logicaltype time error, unknown unit: %s", mp["logicaltype.unit"])
 			}
 
 		case "INTEGER":
 			logicalType.INTEGER = parquet.NewIntType()
 			bitWidth, err := Str2Int32(mp["logicaltype.bitwidth"])
 			if err != nil {
-				return nil, fmt.Errorf("cannot parse logicaltype.bitwidth as int32: %s", err.Error())
+				return nil, errors.Wrap(err, "cannot parse logicaltype.bitwidth as int32")
 			}
 			logicalType.INTEGER.BitWidth = int8(bitWidth)
 			logicalType.INTEGER.IsSigned, err = Str2Bool(mp["logicaltype.issigned"])
 			if err != nil {
-				return nil, fmt.Errorf("cannot parse logicaltype.issigned as boolean: %s", err.Error())
+				return nil, errors.New("cannot parse logicaltype.issigned as boolean")
 			}
 
 		case "JSON":
@@ -419,7 +419,7 @@ func NewLogicalTypeFromFieldsMap(mp map[string]string) (*parquet.LogicalType, er
 			logicalType.UUID = parquet.NewUUIDType()
 
 		default:
-			return nil, fmt.Errorf("unknow logicaltype: " + val)
+			return nil, errors.Errorf("unknow logicaltype: " + val)
 		}
 
 		return logicalType, nil
@@ -751,7 +751,7 @@ func FindFuncTable(pT *parquet.Type, cT *parquet.ConvertedType, logT *parquet.Lo
 func Str2Int32(val string) (int32, error) {
 	valInt, err := strconv.Atoi(val)
 	if err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "strconv.Atoi")
 	}
 	return int32(valInt), nil
 }
@@ -759,7 +759,7 @@ func Str2Int32(val string) (int32, error) {
 func Str2Bool(val string) (bool, error) {
 	valBoolean, err := strconv.ParseBool(val)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "strconv.ParseBool")
 	}
 	return valBoolean, nil
 }
@@ -1045,7 +1045,7 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "types.StrToParquetType")
 			}
 		}
 	case *arrow.Int16Type:
@@ -1063,7 +1063,7 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "types.StrToParquetType")
 			}
 		}
 	case *arrow.Int32Type:
@@ -1081,7 +1081,7 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "types.StrToParquetType")
 			}
 		}
 	case *arrow.Int64Type:
@@ -1100,7 +1100,7 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 				int(el.GetScale()))
 
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "types.StrToParquetType")
 			}
 		}
 	case *arrow.Uint8Type:
@@ -1118,7 +1118,7 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "types.StrToParquetType")
 			}
 		}
 	case *arrow.Uint16Type:
@@ -1137,7 +1137,7 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 				int(el.GetScale()))
 
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "types.StrToParquetType")
 			}
 		}
 	case *arrow.Uint32Type:
@@ -1156,7 +1156,7 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 				int(el.GetScale()))
 
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "types.StrToParquetType")
 			}
 		}
 	case *arrow.Uint64Type:
@@ -1175,7 +1175,7 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 				int(el.GetScale()))
 
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "types.StrToParquetType")
 			}
 		}
 	case *arrow.Float32Type:
@@ -1193,7 +1193,7 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "types.StrToParquetType")
 			}
 		}
 	case *arrow.Float64Type:
@@ -1211,7 +1211,7 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "types.StrToParquetType")
 			}
 		}
 	case *arrow.Date32Type:
@@ -1230,7 +1230,7 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 				int(el.GetScale()))
 
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "types.StrToParquetType")
 			}
 		}
 	case *arrow.Date64Type:
@@ -1249,7 +1249,7 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 				int(el.GetScale()))
 
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "types.StrToParquetType")
 			}
 		}
 	case *arrow.BinaryType:
@@ -1267,7 +1267,7 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "types.StrToParquetType")
 			}
 		}
 	case *arrow.StringType:
@@ -1286,7 +1286,7 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 				int(el.GetScale()))
 
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "types.StrToParquetType")
 			}
 		}
 	case *arrow.BooleanType:
@@ -1304,7 +1304,7 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "types.StrToParquetType")
 			}
 		}
 	case *arrow.Time32Type:
@@ -1322,7 +1322,7 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "types.StrToParquetType")
 			}
 		}
 	case *arrow.TimestampType:
@@ -1340,7 +1340,7 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "types.StrToParquetType")
 			}
 		}
 	}

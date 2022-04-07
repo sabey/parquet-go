@@ -2,7 +2,6 @@ package schema
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/pkg/errors"
 	"github.com/sabey/parquet-go/common"
@@ -25,7 +24,7 @@ func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler, err error) {
 			case string:
 				err = errors.New(x)
 			case error:
-				err = x
+				err = errors.Wrap(x, "recovered")
 			default:
 				err = errors.New("unknown error")
 			}
@@ -34,7 +33,7 @@ func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler, err error) {
 
 	schema := NewJSONSchemaItem()
 	if err := json.Unmarshal([]byte(str), schema); err != nil {
-		return nil, fmt.Errorf("error in unmarshalling json schema string: %v", err.Error())
+		return nil, errors.Wrap(err, "json.Unmarshal")
 	}
 
 	stack := make([]*JSONSchemaItemType, 0)
@@ -48,7 +47,7 @@ func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler, err error) {
 		stack = stack[:ln-1]
 		info, err := common.StringToTag(item.Tag)
 		if err != nil {
-			return nil, fmt.Errorf("failed parse tag: %s", err.Error())
+			return nil, errors.Wrap(err, "common.StringToTag")
 		}
 		var newInfo *common.Tag
 		if info.Type == "" { //struct
@@ -98,7 +97,7 @@ func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler, err error) {
 			infos = append(infos, newInfo)
 
 			if len(item.Fields) != 1 {
-				return nil, fmt.Errorf("LIST needs exact 1 field to define element type")
+				return nil, errors.Errorf("LIST needs exact 1 field to define element type")
 			}
 			stack = append(stack, item.Fields[0])
 
@@ -133,7 +132,7 @@ func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler, err error) {
 			infos = append(infos, newInfo)
 
 			if len(item.Fields) != 2 {
-				return nil, fmt.Errorf("MAP needs exact 2 fields to define key and value type")
+				return nil, errors.Errorf("MAP needs exact 2 fields to define key and value type")
 			}
 			stack = append(stack, item.Fields[1]) //put value
 			stack = append(stack, item.Fields[0]) //put key
@@ -141,7 +140,7 @@ func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler, err error) {
 		} else { //normal variable
 			schema, err := common.NewSchemaElementFromTagMap(info)
 			if err != nil {
-				return nil, fmt.Errorf("failed to create schema from tag map: %s", err.Error())
+				return nil, errors.Wrap(err, "common.NewSchemaElementFromTagMap")
 			}
 			schemaElements = append(schemaElements, schema)
 

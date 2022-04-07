@@ -3,6 +3,8 @@ package encoding
 import (
 	"io"
 	"math"
+
+	"github.com/pkg/errors"
 )
 
 //LittleEndian
@@ -11,10 +13,10 @@ func BinaryReadINT32(r io.Reader, nums []interface{}) error {
 	buf := make([]byte, len(nums)*4)
 	n, err := io.ReadFull(r, buf)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "io.ReadFull")
 	}
 	if len(nums)*4 != n {
-		return io.ErrUnexpectedEOF
+		return errors.Wrap(io.ErrUnexpectedEOF, "io.ErrUnexpectedEOF")
 	}
 
 	for i := 0; i < len(nums); i++ {
@@ -30,10 +32,10 @@ func BinaryReadINT64(r io.Reader, nums []interface{}) error {
 	buf := make([]byte, len(nums)*8)
 	n, err := io.ReadFull(r, buf)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "io.ReadFull")
 	}
 	if len(nums)*8 != n {
-		return io.ErrUnexpectedEOF
+		return errors.Wrap(io.ErrUnexpectedEOF, "io.ErrUnexpectedEOF")
 	}
 
 	for i := 0; i < len(nums); i++ {
@@ -53,10 +55,10 @@ func BinaryReadFLOAT32(r io.Reader, nums []interface{}) error {
 	buf := make([]byte, len(nums)*4)
 	n, err := io.ReadFull(r, buf)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "io.ReadFull")
 	}
 	if len(nums)*4 != n {
-		return io.ErrUnexpectedEOF
+		return errors.Wrap(io.ErrUnexpectedEOF, "io.ErrUnexpectedEOF")
 	}
 
 	for i := 0; i < len(nums); i++ {
@@ -72,10 +74,10 @@ func BinaryReadFLOAT64(r io.Reader, nums []interface{}) error {
 	buf := make([]byte, len(nums)*8)
 	n, err := io.ReadFull(r, buf)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "io.ReadFull")
 	}
 	if len(nums)*8 != n {
-		return io.ErrUnexpectedEOF
+		return errors.Wrap(io.ErrUnexpectedEOF, "io.ErrUnexpectedEOF")
 	}
 
 	for i := 0; i < len(nums); i++ {

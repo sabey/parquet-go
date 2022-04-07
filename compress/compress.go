@@ -1,8 +1,7 @@
 package compress
 
 import (
-	"fmt"
-
+	"github.com/pkg/errors"
 	"github.com/sabey/parquet-go/parquet"
 )
 
@@ -16,10 +15,14 @@ var compressors = map[parquet.CompressionCodec]*Compressor{}
 func Uncompress(buf []byte, compressMethod parquet.CompressionCodec) ([]byte, error) {
 	c, ok := compressors[compressMethod]
 	if !ok {
-		return nil, fmt.Errorf("unsupported compress method")
+		return nil, errors.Errorf("unsupported compress method")
 	}
 
-	return c.Uncompress(buf)
+	bs, err := c.Uncompress(buf)
+	if err != nil {
+		return bs, errors.Wrap(err, "c.Uncompress")
+	}
+	return bs, nil
 }
 
 func Compress(buf []byte, compressMethod parquet.CompressionCodec) []byte {

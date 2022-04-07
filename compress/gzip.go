@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/klauspost/compress/gzip"
+	"github.com/pkg/errors"
 	"github.com/sabey/parquet-go/parquet"
 )
 
@@ -36,7 +37,10 @@ func init() {
 			rbuf := bytes.NewReader(buf)
 			gzipReader, _ := gzip.NewReader(rbuf)
 			res, err := ioutil.ReadAll(gzipReader)
-			return res, err
+			if err != nil {
+				return res, errors.Wrap(err, "ioutil.ReadAll")
+			}
+			return res, nil
 		},
 	}
 }

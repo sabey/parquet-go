@@ -22,7 +22,7 @@ func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map
 			case string:
 				err = errors.New(x)
 			case error:
-				err = x
+				err = errors.Wrap(x, "recovered")
 			default:
 				err = errors.New("unknown error")
 			}
@@ -249,7 +249,7 @@ func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map
 				pT, cT := schema.Type, schema.ConvertedType
 				val, err := types.JSONTypeToParquetType(node.Val, pT, cT, int(schema.GetTypeLength()), int(schema.GetScale()))
 				if err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "types.JSONTypeToParquetType")
 				}
 
 				table.Values = append(table.Values, val)

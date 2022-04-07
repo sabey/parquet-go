@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/pkg/errors"
 	"github.com/sabey/parquet-go/common"
 	"github.com/sabey/parquet-go/layout"
 	"github.com/sabey/parquet-go/marshal"
@@ -37,21 +38,21 @@ func NewParquetReader(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 	res.NP = np
 	res.PFile = pFile
 	if err = res.ReadFooter(); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "res.ReadFooter")
 	}
 	res.ColumnBuffers = make(map[string]*ColumnBufferType)
 
 	if obj != nil {
 		if sa, ok := obj.(string); ok {
 			err = res.SetSchemaHandlerFromJSON(sa)
-			return res, err
+			return res, errors.Wrap(err, "res.SetSchemaHandlerFromJSON")
 
 		} else if sa, ok := obj.([]*parquet.SchemaElement); ok {
 			res.SchemaHandler = schema.NewSchemaHandlerFromSchemaList(sa)
 
 		} else {
 			if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj); err != nil {
-				return res, err
+				return res, errors.Wrap(err, "schema.NewSchemaHandlerFromStruct")
 			}
 
 			res.ObjType = reflect.TypeOf(obj).Elem()
@@ -67,7 +68,7 @@ func NewParquetReader(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 		if schema.GetNumChildren() == 0 {
 			pathStr := res.SchemaHandler.IndexMap[int32(i)]
 			if res.ColumnBuffers[pathStr], err = NewColumnBuffer(pFile, res.Footer, res.SchemaHandler, pathStr); err != nil {
-				return res, err
+				return res, errors.Wrap(err, "NewColumnBuffer")
 			}
 		}
 	}
@@ -79,7 +80,7 @@ func (pr *ParquetReader) SetSchemaHandlerFromJSON(jsonSchema string) error {
 	var err error
 
 	if pr.SchemaHandler, err = schema.NewSchemaHandlerFromJSON(jsonSchema); err != nil {
-		return err
+		return errors.Wrap(err, "schema.NewSchemaHandlerFromJSON")
 	}
 
 	pr.RenameSchema()
@@ -88,7 +89,7 @@ func (pr *ParquetReader) SetSchemaHandlerFromJSON(jsonSchema string) error {
 		if schemaElement.GetNumChildren() == 0 {
 			pathStr := pr.SchemaHandler.IndexMap[int32(i)]
 			if pr.ColumnBuffers[pathStr], err = NewColumnBuffer(pr.PFile, pr.Footer, pr.SchemaHandler, pathStr); err != nil {
-				return err
+				return errors.Wrap(err, "NewColumnBuffer")
 			}
 		}
 	}
@@ -123,28 +124,31 @@ func (pr *ParquetReader) GetFooterSize() (uint32, error) {
 	var err error
 	buf := make([]byte, 4)
 	if _, err = pr.PFile.Seek(-8, io.SeekEnd); err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "pr.PFile.Seek")
 	}
 	if _, err = io.ReadFull(pr.PFile, buf); err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "io.ReadFull")
 	}
 	size := binary.LittleEndian.Uint32(buf)
-	return size, err
+	return size, nil
 }
 
 //Read footer from parquet file
 func (pr *ParquetReader) ReadFooter() error {
 	size, err := pr.GetFooterSize()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "pr.GetFooterSize")
 	}
 	if _, err = pr.PFile.Seek(-(int64)(8+size), io.SeekEnd); err != nil {
-		return err
+		return errors.Wrap(err, "pr.PFile.Seek")
 	}
 	pr.Footer = parquet.NewFileMetaData()
 	pf := thrift.NewTCompactProtocolFactory()
 	protocol := pf.GetProtocol(thrift.NewStreamTransportR(pr.PFile))
-	return pr.Footer.Read(context.TODO(), protocol)
+	if err := pr.Footer.Read(context.TODO(), protocol); err != nil {
+		return errors.Wrap(err, "pr.Footer.Read")
+	}
+	return nil
 }
 
 //Skip rows of parquet file
@@ -160,7 +164,7 @@ func (pr *ParquetReader) SkipRows(num int64) error {
 	for _, pathStr := range pr.SchemaHandler.ValueColumns {
 		if _, ok := pr.ColumnBuffers[pathStr]; !ok {
 			if pr.ColumnBuffers[pathStr], err = NewColumnBuffer(pr.PFile, pr.Footer, pr.SchemaHandler, pathStr); err != nil {
-				return err
+				return errors.Wrap(err, "NewColumnBuffer")
 			}
 		}
 	}
@@ -190,12 +194,15 @@ func (pr *ParquetReader) SkipRows(num int64) error {
 	for i := int64(0); i < pr.NP; i++ {
 		stopChan <- 0
 	}
-	return err
+	return nil
 }
 
 //Read rows of parquet file and unmarshal all to dst
 func (pr *ParquetReader) Read(dstInterface interface{}) error {
-	return pr.read(dstInterface, "")
+	if err := pr.read(dstInterface, ""); err != nil {
+		return errors.Wrap(err, "pr.read")
+	}
+	return nil
 }
 
 // Read maxReadNumber objects
@@ -203,7 +210,7 @@ func (pr *ParquetReader) ReadByNumber(maxReadNumber int) ([]interface{}, error) 
 	var err error
 	if pr.ObjType == nil {
 		if pr.ObjType, err = pr.SchemaHandler.GetType(pr.SchemaHandler.GetRootInName()); err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "pr.SchemaHandler.GetType")
 		}
 	}
 
@@ -212,7 +219,7 @@ func (pr *ParquetReader) ReadByNumber(maxReadNumber int) ([]interface{}, error) 
 	res.Elem().Set(vs)
 
 	if err = pr.Read(res.Interface()); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "pr.Read")
 	}
 
 	ln := res.Elem().Len()
@@ -228,10 +235,13 @@ func (pr *ParquetReader) ReadByNumber(maxReadNumber int) ([]interface{}, error) 
 func (pr *ParquetReader) ReadPartial(dstInterface interface{}, prefixPath string) error {
 	prefixPath, err := pr.SchemaHandler.ConvertToInPathStr(prefixPath)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "pr.SchemaHandler.ConvertToInPathStr")
 	}
 
-	return pr.read(dstInterface, prefixPath)
+	if err := pr.read(dstInterface, prefixPath); err != nil {
+		return errors.Wrap(err, "pr.read")
+	}
+	return nil
 }
 
 // Read maxReadNumber partial objects
@@ -239,7 +249,7 @@ func (pr *ParquetReader) ReadPartialByNumber(maxReadNumber int, prefixPath strin
 	var err error
 	if pr.ObjPartialType == nil {
 		if pr.ObjPartialType, err = pr.SchemaHandler.GetType(prefixPath); err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "pr.SchemaHandler.GetType")
 		}
 	}
 
@@ -248,7 +258,7 @@ func (pr *ParquetReader) ReadPartialByNumber(maxReadNumber int, prefixPath strin
 	res.Elem().Set(vs)
 
 	if err = pr.ReadPartial(res.Interface(), prefixPath); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "pr.ReadPartial")
 	}
 
 	ln := res.Elem().Len()
@@ -334,7 +344,7 @@ func (pr *ParquetReader) read(dstInterface interface{}, prefixPath string) error
 
 			dstList[index] = reflect.New(reflect.SliceOf(ot)).Interface()
 			if err2 := marshal.Unmarshal(&tmap, b, e, dstList[index], pr.SchemaHandler, prefixPath); err2 != nil {
-				err = err2
+				err = errors.Wrap(err2, "marshal.Unmarshal")
 			}
 		}(int(bgn), int(end), int(c))
 	}

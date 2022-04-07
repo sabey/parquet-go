@@ -75,7 +75,7 @@ func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFile, sc
 					case string:
 						err = errors.New(x)
 					case error:
-						err = x
+						err = errors.Wrap(x, "recovered")
 					default:
 						err = errors.New("unknown error")
 					}
@@ -107,6 +107,8 @@ func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFile, sc
 		}
 		rowGroup.Chunks = append(rowGroup.Chunks, chunksList[c]...)
 	}
-
-	return rowGroup, err
+	if err != nil {
+		return rowGroup, errors.Wrap(err, "panic")
+	}
+	return rowGroup, nil
 }

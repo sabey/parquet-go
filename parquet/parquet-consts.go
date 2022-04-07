@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 	"time"
-	
+
 	"github.com/apache/thrift/lib/go/thrift"
 )
 

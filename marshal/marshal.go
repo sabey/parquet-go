@@ -237,7 +237,7 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 			case string:
 				err = errors.New(x)
 			case error:
-				err = x
+				err = errors.Wrap(x, "recovered")
 			default:
 				err = errors.New("unkown error")
 			}

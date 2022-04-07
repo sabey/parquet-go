@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/pierrec/lz4/v4"
+	"github.com/pkg/errors"
 	"github.com/sabey/parquet-go/parquet"
 )
 
@@ -33,7 +34,10 @@ func init() {
 			rbuf := bytes.NewReader(buf)
 			lz4Reader := lz4.NewReader(rbuf)
 			res, err := ioutil.ReadAll(lz4Reader)
-			return res, err
+			if err != nil {
+				return res, errors.Wrap(err, "ioutil.ReadAll")
+			}
+			return res, nil
 		},
 	}
 }

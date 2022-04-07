@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/apache/arrow/go/arrow"
+	"github.com/pkg/errors"
 	"github.com/sabey/parquet-go/common"
 	"github.com/sabey/parquet-go/parquet"
 )
@@ -23,7 +24,6 @@ const (
 // determine the size of the objects.
 func ConvertArrowToParquetSchema(schema *arrow.Schema) ([]string, error) {
 	metaData := make([]string, len(schema.Fields()))
-	var err error
 	for k, v := range schema.Fields() {
 		switch fieldType := v.Type; fieldType.Name() {
 		case arrow.PrimitiveTypes.Int8.Name():
@@ -78,16 +78,16 @@ func ConvertArrowToParquetSchema(schema *arrow.Schema) ([]string, error) {
 		case arrow.FixedWidthTypes.Timestamp_ms.Name():
 			tsType := fieldType.(*arrow.TimestampType)
 			if tsType.Unit != arrow.Millisecond {
-				return nil, fmt.Errorf("Unsupported arrow format: %s", tsType.String())
+				return nil, errors.Errorf("Unsupported arrow format: %s", tsType.String())
 			}
 			metaData[k] = fmt.Sprintf(convertedMetaDataTemplate, v.Name,
 				parquet.Type_INT64, parquet.ConvertedType_TIMESTAMP_MILLIS)
 		default:
 			return nil,
-				fmt.Errorf("Unsupported arrow format: %s", fieldType.Name())
+				errors.Errorf("Unsupported arrow format: %s", fieldType.Name())
 		}
 	}
-	return metaData, err
+	return metaData, nil
 }
 
 // NewSchemaHandlerFromArrow creates a schema handler from arrow format.
@@ -101,7 +101,7 @@ func NewSchemaHandlerFromArrow(arrowSchema *arrow.Schema) (
 
 	fields, err := ConvertArrowToParquetSchema(arrowSchema)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "ConvertArrowToParquetSchema")
 	}
 
 	rootSchema := parquet.NewSchemaElement()
@@ -121,12 +121,12 @@ func NewSchemaHandlerFromArrow(arrowSchema *arrow.Schema) (
 	for _, field := range fields {
 		info, err := common.StringToTag(field)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "common.StringToTag")
 		}
 		infos = append(infos, info)
 		schema, err := common.NewSchemaElementFromTagMap(info)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "common.NewSchemaElementFromTagMap")
 		}
 		schemaList = append(schemaList, schema)
 	}

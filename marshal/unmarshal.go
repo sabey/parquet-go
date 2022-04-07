@@ -35,7 +35,7 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 			case string:
 				err = errors.New(x)
 			case error:
-				err = x
+				err = errors.Wrap(x, "recovered")
 			default:
 				err = errors.New("unknown error")
 			}

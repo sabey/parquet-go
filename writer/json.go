@@ -3,6 +3,7 @@ package writer
 import (
 	"io"
 
+	"github.com/pkg/errors"
 	"github.com/sabey/parquet-go-source/writerfile"
 	"github.com/sabey/parquet-go/layout"
 	"github.com/sabey/parquet-go/marshal"
@@ -17,7 +18,11 @@ type JSONWriter struct {
 
 func NewJSONWriterFromWriter(jsonSchema string, w io.Writer, np int64) (*JSONWriter, error) {
 	wf := writerfile.NewWriterFile(w)
-	return NewJSONWriter(jsonSchema, wf, np)
+	jw, err := NewJSONWriter(jsonSchema, wf, np)
+	if err != nil {
+		return jw, errors.Wrap(err, "NewJSONWriter")
+	}
+	return jw, nil
 }
 
 //Create JSON writer
@@ -26,7 +31,7 @@ func NewJSONWriter(jsonSchema string, pfile source.ParquetFile, np int64) (*JSON
 	res := new(JSONWriter)
 	res.SchemaHandler, err = schema.NewSchemaHandlerFromJSON(jsonSchema)
 	if err != nil {
-		return res, err
+		return res, errors.Wrap(err, "schema.NewSchemaHandlerFromJSON")
 	}
 
 	res.PFile = pfile
@@ -42,5 +47,8 @@ func NewJSONWriter(jsonSchema string, pfile source.ParquetFile, np int64) (*JSON
 	res.Offset = 4
 	_, err = res.PFile.Write([]byte("PAR1"))
 	res.MarshalFunc = marshal.MarshalJSON
-	return res, err
+	if err != nil {
+		return res, errors.Wrap(err, "res.PFile.Write")
+	}
+	return res, nil
 }

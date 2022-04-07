@@ -137,6 +137,8 @@ github.com/sabey/parquet-go v0.0.0-20220406195015-1fe4eef2ab29/go.mod h1:Jjsk2Ik
 github.com/sabey/parquet-go-source v0.0.0-20220406194322-e0a52bd89f5d/go.mod h1:s9ZCQMC05cEKKMQiEDCDai28RLeDry+Eb0Zxq68MOeE=
 github.com/sabey/parquet-go-source v0.0.0-20220406195110-875ba970558a h1:ELWq3tLCE2QcNwnHJZcCq5QWyEhzIMWaxsdcUyxV3c0=
 github.com/sabey/parquet-go-source v0.0.0-20220406195110-875ba970558a/go.mod h1:9jvAvYzFLzjnu9/jEt3YU1Hf1Tu30DULicJ81YsQZqg=
+github.com/sabey/parquet-go-source v0.0.0-20220407002950-248dcfc17503 h1:Q7qruGBCnHImaqnd+1KTS3nuqTbPORAoeT45aqp7kg4=
+github.com/sabey/parquet-go-source v0.0.0-20220407002950-248dcfc17503/go.mod h1:9jvAvYzFLzjnu9/jEt3YU1Hf1Tu30DULicJ81YsQZqg=
 github.com/spf13/afero v1.2.2/go.mod h1:9ZxEEn6pIJ8Rxe320qSDBk6AsU0r9pR7Q4OcevTdifk=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.2.0/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=

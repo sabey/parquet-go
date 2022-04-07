@@ -1,8 +1,7 @@
 package reader
 
 import (
-	"fmt"
-
+	"github.com/pkg/errors"
 	"github.com/sabey/parquet-go/schema"
 	"github.com/sabey/parquet-go/source"
 )
@@ -13,7 +12,7 @@ func NewParquetColumnReader(pFile source.ParquetFile, np int64) (*ParquetReader,
 	res.NP = np
 	res.PFile = pFile
 	if err := res.ReadFooter(); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "res.ReadFooter")
 	}
 	res.ColumnBuffers = make(map[string]*ColumnBufferType)
 	res.SchemaHandler = schema.NewSchemaHandlerFromSchemaList(res.Footer.GetSchema())
@@ -23,21 +22,21 @@ func NewParquetColumnReader(pFile source.ParquetFile, np int64) (*ParquetReader,
 }
 
 func (pr *ParquetReader) SkipRowsByPath(pathStr string, num int64) error {
-	errPathNotFound := fmt.Errorf("path %v not found", pathStr)
+	errPathNotFound := errors.Errorf("path %v not found", pathStr)
 
 	pathStr, err := pr.SchemaHandler.ConvertToInPathStr(pathStr)
 	if num <= 0 || len(pathStr) <= 0 || err != nil {
-		return err
+		return errors.Wrap(err, "pr.SchemaHandler.ConvertToInPathStr")
 	}
 
 	if _, ok := pr.SchemaHandler.MapIndex[pathStr]; !ok {
-		return errPathNotFound
+		return errors.Wrap(errPathNotFound, "errPathNotFound")
 	}
 
 	if _, ok := pr.ColumnBuffers[pathStr]; !ok {
 		var err error
 		if pr.ColumnBuffers[pathStr], err = NewColumnBuffer(pr.PFile, pr.Footer, pr.SchemaHandler, pathStr); err != nil {
-			return err
+			return errors.Wrap(err, "NewColumnBuffer")
 		}
 	}
 
@@ -45,7 +44,7 @@ func (pr *ParquetReader) SkipRowsByPath(pathStr string, num int64) error {
 		cb.SkipRows(int64(num))
 
 	} else {
-		return errPathNotFound
+		return errors.Wrap(errPathNotFound, "errPathNotFound")
 	}
 
 	return nil
@@ -61,21 +60,21 @@ func (pr *ParquetReader) SkipRowsByIndex(index int64, num int64) {
 
 // ReadColumnByPath reads column by path in schema.
 func (pr *ParquetReader) ReadColumnByPath(pathStr string, num int64) (values []interface{}, rls []int32, dls []int32, err error) {
-	errPathNotFound := fmt.Errorf("path %v not found", pathStr)
+	errPathNotFound := errors.Errorf("path %v not found", pathStr)
 
 	pathStr, err = pr.SchemaHandler.ConvertToInPathStr(pathStr)
 	if num <= 0 || len(pathStr) <= 0 || err != nil {
-		return []interface{}{}, []int32{}, []int32{}, err
+		return []interface{}{}, []int32{}, []int32{}, errors.Wrap(err, "pr.SchemaHandler.ConvertToInPathStr")
 	}
 
 	if _, ok := pr.SchemaHandler.MapIndex[pathStr]; !ok {
-		return []interface{}{}, []int32{}, []int32{}, errPathNotFound
+		return []interface{}{}, []int32{}, []int32{}, errors.Wrap(errPathNotFound, "errPathNotFound")
 	}
 
 	if _, ok := pr.ColumnBuffers[pathStr]; !ok {
 		var err error
 		if pr.ColumnBuffers[pathStr], err = NewColumnBuffer(pr.PFile, pr.Footer, pr.SchemaHandler, pathStr); err != nil {
-			return []interface{}{}, []int32{}, []int32{}, err
+			return []interface{}{}, []int32{}, []int32{}, errors.Wrap(err, "NewColumnBuffer")
 		}
 	}
 
@@ -83,15 +82,19 @@ func (pr *ParquetReader) ReadColumnByPath(pathStr string, num int64) (values []i
 		table, _ := cb.ReadRows(int64(num))
 		return table.Values, table.RepetitionLevels, table.DefinitionLevels, nil
 	}
-	return []interface{}{}, []int32{}, []int32{}, errPathNotFound
+	return []interface{}{}, []int32{}, []int32{}, errors.Wrap(errPathNotFound, "errPathNotFound")
 }
 
 // ReadColumnByIndex reads column by index. The index of first column is 0.
 func (pr *ParquetReader) ReadColumnByIndex(index int64, num int64) (values []interface{}, rls []int32, dls []int32, err error) {
 	if index >= int64(len(pr.SchemaHandler.ValueColumns)) {
-		err = fmt.Errorf("index %v out of range %v", index, len(pr.SchemaHandler.ValueColumns))
+		err = errors.Errorf("index %v out of range %v", index, len(pr.SchemaHandler.ValueColumns))
 		return
 	}
 	pathStr := pr.SchemaHandler.ValueColumns[index]
-	return pr.ReadColumnByPath(pathStr, num)
+	values, rls, dls, err = pr.ReadColumnByPath(pathStr, num)
+	if err != nil {
+		return values, rls, dls, errors.Wrap(err, "pr.ReadColumnByPath")
+	}
+	return values, rls, dls, nil
 }

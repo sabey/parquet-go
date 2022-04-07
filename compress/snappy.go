@@ -5,6 +5,7 @@ package compress
 
 import (
 	"github.com/golang/snappy"
+	"github.com/pkg/errors"
 	"github.com/sabey/parquet-go/parquet"
 )
 
@@ -14,7 +15,12 @@ func init() {
 			return snappy.Encode(nil, buf)
 		},
 		Uncompress: func(buf []byte) (bytes []byte, err error) {
-			return snappy.Decode(nil, buf)
+			bs, err := snappy.Decode(nil, buf)
+			if err != nil {
+				return bs, errors.Wrap(err, "snappy.Decode")
+			}
+
+			return bs, nil
 		},
 	}
 }

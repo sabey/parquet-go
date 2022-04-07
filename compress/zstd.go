@@ -5,6 +5,7 @@ package compress
 
 import (
 	"github.com/klauspost/compress/zstd"
+	"github.com/pkg/errors"
 	"github.com/sabey/parquet-go/parquet"
 )
 
@@ -17,7 +18,12 @@ func init() {
 			return enc.EncodeAll(buf, nil)
 		},
 		Uncompress: func(buf []byte) (bytes []byte, err error) {
-			return dec.DecodeAll(buf, nil)
+			bs, err := dec.DecodeAll(buf, nil)
+			if err != nil {
+				return bs, errors.Wrap(err, "dec.DecodeAll")
+			}
+
+			return bs, nil
 		},
 	}
 }

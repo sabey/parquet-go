@@ -1,9 +1,9 @@
 package schema
 
 import (
-	"fmt"
 	"reflect"
 
+	"github.com/pkg/errors"
 	"github.com/sabey/parquet-go/parquet"
 	"github.com/sabey/parquet-go/types"
 )
@@ -98,12 +98,12 @@ func (sh *SchemaHandler) GetTypes() []reflect.Type {
 func (sh *SchemaHandler) GetType(prefixPath string) (reflect.Type, error) {
 	prefixPath, err := sh.ConvertToInPathStr(prefixPath)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "sh.ConvertToInPathStr")
 	}
 
 	ts := sh.GetTypes()
 	if idx, ok := sh.MapIndex[prefixPath]; !ok {
-		return nil, fmt.Errorf("[GetType] Can't find %v", prefixPath)
+		return nil, errors.Errorf("[GetType] Can't find %v", prefixPath)
 	} else {
 		return ts[idx], nil
 	}

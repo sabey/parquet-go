@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"reflect"
 
+	"github.com/pkg/errors"
 	"github.com/sabey/parquet-go/parquet"
 )
 
@@ -83,17 +84,26 @@ func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType, len
 		if *pT == parquet.Type_BOOLEAN {
 			var v bool
 			_, err := fmt.Sscanf(s, "%t", &v)
-			return v, err
+			if err != nil {
+				return v, errors.Wrap(err, "fmt.Sscanf")
+			}
+			return v, nil
 
 		} else if *pT == parquet.Type_INT32 {
 			var v int32
 			_, err := fmt.Sscanf(s, "%d", &v)
-			return v, err
+			if err != nil {
+				return v, errors.Wrap(err, "fmt.Sscanf")
+			}
+			return v, nil
 
 		} else if *pT == parquet.Type_INT64 {
 			var v int64
 			_, err := fmt.Sscanf(s, "%d", &v)
-			return v, err
+			if err != nil {
+				return v, errors.Wrap(err, "fmt.Sscanf")
+			}
+			return v, nil
 
 		} else if *pT == parquet.Type_INT96 {
 			res := StrIntToBinary(s, "LittleEndian", 12, true)
@@ -102,12 +112,18 @@ func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType, len
 		} else if *pT == parquet.Type_FLOAT {
 			var v float32
 			_, err := fmt.Sscanf(s, "%f", &v)
-			return v, err
+			if err != nil {
+				return v, errors.Wrap(err, "fmt.Sscanf")
+			}
+			return v, nil
 
 		} else if *pT == parquet.Type_DOUBLE {
 			var v float64
 			_, err := fmt.Sscanf(s, "%f", &v)
-			return v, err
+			if err != nil {
+				return v, errors.Wrap(err, "fmt.Sscanf")
+			}
+			return v, nil
 
 		} else if *pT == parquet.Type_BYTE_ARRAY {
 			return s, nil
@@ -124,48 +140,75 @@ func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType, len
 	} else if *cT == parquet.ConvertedType_INT_8 {
 		var v int8
 		_, err := fmt.Sscanf(s, "%d", &v)
-		return int32(v), err
+		if err != nil {
+			return int32(v), errors.Wrap(err, "fmt.Sscanf")
+		}
+		return int32(v), nil
 
 	} else if *cT == parquet.ConvertedType_INT_16 {
 		var v int16
 		_, err := fmt.Sscanf(s, "%d", &v)
-		return int32(v), err
+		if err != nil {
+			return int32(v), errors.Wrap(err, "fmt.Sscanf")
+		}
+		return int32(v), nil
 
 	} else if *cT == parquet.ConvertedType_INT_32 {
 		var v int32
 		_, err := fmt.Sscanf(s, "%d", &v)
-		return int32(v), err
+		if err != nil {
+			return int32(v), errors.Wrap(err, "fmt.Sscanf")
+		}
+		return int32(v), nil
 
 	} else if *cT == parquet.ConvertedType_UINT_8 {
 		var v uint8
 		_, err := fmt.Sscanf(s, "%d", &v)
-		return int32(v), err
+		if err != nil {
+			return int32(v), errors.Wrap(err, "fmt.Sscanf")
+		}
+		return int32(v), nil
 
 	} else if *cT == parquet.ConvertedType_UINT_16 {
 		var v uint16
 		_, err := fmt.Sscanf(s, "%d", &v)
-		return int32(v), err
+		if err != nil {
+			return int32(v), errors.Wrap(err, "fmt.Sscanf")
+		}
+		return int32(v), nil
 
 	} else if *cT == parquet.ConvertedType_UINT_32 {
 		var v uint32
 		_, err := fmt.Sscanf(s, "%d", &v)
-		return int32(v), err
+		if err != nil {
+			return int32(v), errors.Wrap(err, "fmt.Sscanf")
+		}
+		return int32(v), nil
 
 	} else if *cT == parquet.ConvertedType_DATE || *cT == parquet.ConvertedType_TIME_MILLIS {
 		var v int32
 		_, err := fmt.Sscanf(s, "%d", &v)
-		return int32(v), err
+		if err != nil {
+			return int32(v), errors.Wrap(err, "fmt.Sscanf")
+		}
+		return int32(v), nil
 
 	} else if *cT == parquet.ConvertedType_UINT_64 {
 		var vt uint64
 		_, err := fmt.Sscanf(s, "%d", &vt)
-		return int64(vt), err
+		if err != nil {
+			return int64(vt), errors.Wrap(err, "fmt.Sscanf")
+		}
+		return int64(vt), nil
 
 	} else if *cT == parquet.ConvertedType_INT_64 ||
 		*cT == parquet.ConvertedType_TIME_MICROS || *cT == parquet.ConvertedType_TIMESTAMP_MICROS || *cT == parquet.ConvertedType_TIMESTAMP_MILLIS {
 		var v int64
 		_, err := fmt.Sscanf(s, "%d", &v)
-		return v, err
+		if err != nil {
+			return v, errors.Wrap(err, "fmt.Sscanf")
+		}
+		return v, nil
 
 	} else if *cT == parquet.ConvertedType_INTERVAL {
 		res := StrIntToBinary(s, "LittleEndian", 12, false)
@@ -334,5 +377,9 @@ func JSONTypeToParquetType(val reflect.Value, pT *parquet.Type, cT *parquet.Conv
 		return nil, nil
 	}
 	s := fmt.Sprintf("%v", val)
-	return StrToParquetType(s, pT, cT, length, scale)
+	v, err := StrToParquetType(s, pT, cT, length, scale)
+	if err != nil {
+		return v, errors.Wrap(err, "StrToParquetType")
+	}
+	return v, nil
 }

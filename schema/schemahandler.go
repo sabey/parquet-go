@@ -1,7 +1,6 @@
 package schema
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -104,7 +103,7 @@ func (sh *SchemaHandler) MaxDefinitionLevel(path []string) (int32, error) {
 	for i := 2; i <= ln; i++ {
 		rt, err := sh.GetRepetitionType(path[:i])
 		if err != nil {
-			return 0, err
+			return 0, errors.Wrap(err, "sh.GetRepetitionType")
 		}
 		if rt != parquet.FieldRepetitionType_REQUIRED {
 			res++
@@ -120,7 +119,7 @@ func (sh *SchemaHandler) GetRepetitionLevelIndex(path []string, rl int32) (int32
 	for i := 2; i <= ln; i++ {
 		rt, err := sh.GetRepetitionType(path[:i])
 		if err != nil {
-			return 0, err
+			return 0, errors.Wrap(err, "sh.GetRepetitionType")
 		}
 		if rt == parquet.FieldRepetitionType_REPEATED {
 			res++
@@ -130,7 +129,7 @@ func (sh *SchemaHandler) GetRepetitionLevelIndex(path []string, rl int32) (int32
 			return int32(i - 1), nil
 		}
 	}
-	return res, fmt.Errorf("rl = %d not found in path = %v", rl, path)
+	return res, errors.Errorf("rl = %d not found in path = %v", rl, path)
 }
 
 // MaxRepetitionLevel returns the max repetition level type of a column by it's schema path
@@ -140,7 +139,7 @@ func (sh *SchemaHandler) MaxRepetitionLevel(path []string) (int32, error) {
 	for i := 2; i <= ln; i++ {
 		rt, err := sh.GetRepetitionType(path[:i])
 		if err != nil {
-			return 0, err
+			return 0, errors.Wrap(err, "sh.GetRepetitionType")
 		}
 		if rt == parquet.FieldRepetitionType_REPEATED {
 			res++
@@ -197,7 +196,7 @@ func (sh *SchemaHandler) ConvertToInPathStr(pathStr string) (string, error) {
 		return res, nil
 	}
 
-	return "", fmt.Errorf("can't find path %v", pathStr)
+	return "", errors.Errorf("can't find path %v", pathStr)
 }
 
 //Get root name from the schema handler
@@ -234,7 +233,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 			case string:
 				err = errors.New(x)
 			case error:
-				err = x
+				err = errors.Wrap(x, "recovered")
 			default:
 				err = errors.New("error occurred")
 			}
@@ -284,7 +283,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 				newItem := NewItem()
 				newItem.Info, err = common.StringToTag(tagStr)
 				if err != nil {
-					return nil, fmt.Errorf("failed parse tag: %s", err.Error())
+					return nil, errors.Wrap(err, "common.StringToTag")
 				}
 				newItem.Info.InName = f.Name
 				newItem.GoType = f.Type
@@ -388,7 +387,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 		} else {
 			schema, err := common.NewSchemaElementFromTagMap(item.Info)
 			if err != nil {
-				return nil, fmt.Errorf("failed to create schema from tag map: %s", err.Error())
+				return nil, errors.Wrap(err, "common.NewSchemaElementFromTagMap")
 			}
 			schemaElements = append(schemaElements, schema)
 			newInfo = common.NewTag()

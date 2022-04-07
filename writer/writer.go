@@ -49,7 +49,11 @@ type ParquetWriter struct {
 
 func NewParquetWriterFromWriter(w io.Writer, obj interface{}, np int64) (*ParquetWriter, error) {
 	wf := writerfile.NewWriterFile(w)
-	return NewParquetWriter(wf, obj, np)
+	pw, err := NewParquetWriter(wf, obj, np)
+	if err != nil {
+		return pw, errors.Wrap(err, "NewParquetWriter")
+	}
+	return pw, nil
 }
 
 //Create a parquet handler. Obj is a object with tags or JSON schema string.
@@ -83,27 +87,30 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 	if obj != nil {
 		if sa, ok := obj.(string); ok {
 			err = res.SetSchemaHandlerFromJSON(sa)
-			return res, err
+			return res, errors.Wrap(err, "res.SetSchemaHandlerFromJSON")
 
 		} else if sa, ok := obj.([]*parquet.SchemaElement); ok {
 			res.SchemaHandler = schema.NewSchemaHandlerFromSchemaList(sa)
 
 		} else {
 			if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj); err != nil {
-				return res, err
+				return res, errors.Wrap(err, "schema.NewSchemaHandlerFromStruct")
 			}
 		}
 
 		res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
 	}
 
-	return res, err
+	if err != nil {
+		return res, errors.Wrap(err, "res.PFile.Write")
+	}
+	return res, nil
 }
 
 func (pw *ParquetWriter) SetSchemaHandlerFromJSON(jsonSchema string) error {
 	var err error
 	if pw.SchemaHandler, err = schema.NewSchemaHandlerFromJSON(jsonSchema); err != nil {
-		return err
+		return errors.Wrap(err, "schema.NewSchemaHandlerFromJSON")
 	}
 	pw.Footer.Schema = pw.Footer.Schema[:0]
 	pw.Footer.Schema = append(pw.Footer.Schema, pw.SchemaHandler.SchemaElements...)
@@ -130,7 +137,7 @@ func (pw *ParquetWriter) WriteStop() error {
 	var err error
 
 	if err = pw.Flush(true); err != nil {
-		return err
+		return errors.Wrap(err, "pw.Flush")
 	}
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
@@ -142,10 +149,10 @@ func (pw *ParquetWriter) WriteStop() error {
 		for _, columnChunk := range rowGroup.Columns {
 			columnIndexBuf, err := ts.Write(context.TODO(), pw.ColumnIndexes[idx])
 			if err != nil {
-				return err
+				return errors.Wrap(err, "ts.Write")
 			}
 			if _, err = pw.PFile.Write(columnIndexBuf); err != nil {
-				return err
+				return errors.Wrap(err, "pw.PFile.Write")
 			}
 
 			idx++
@@ -165,10 +172,10 @@ func (pw *ParquetWriter) WriteStop() error {
 		for _, columnChunk := range rowGroup.Columns {
 			offsetIndexBuf, err := ts.Write(context.TODO(), pw.OffsetIndexes[idx])
 			if err != nil {
-				return err
+				return errors.Wrap(err, "ts.Write")
 			}
 			if _, err = pw.PFile.Write(offsetIndexBuf); err != nil {
-				return err
+				return errors.Wrap(err, "pw.PFile.Write")
 			}
 
 			idx++
@@ -184,20 +191,20 @@ func (pw *ParquetWriter) WriteStop() error {
 
 	footerBuf, err := ts.Write(context.TODO(), pw.Footer)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "ts.Write")
 	}
 
 	if _, err = pw.PFile.Write(footerBuf); err != nil {
-		return err
+		return errors.Wrap(err, "pw.PFile.Write")
 	}
 	footerSizeBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(footerSizeBuf, uint32(len(footerBuf)))
 
 	if _, err = pw.PFile.Write(footerSizeBuf); err != nil {
-		return err
+		return errors.Wrap(err, "pw.PFile.Write")
 	}
 	if _, err = pw.PFile.Write([]byte("PAR1")); err != nil {
-		return err
+		return errors.Wrap(err, "pw.PFile.Write")
 	}
 	return nil
 
@@ -229,8 +236,10 @@ func (pw *ParquetWriter) Write(src interface{}) error {
 		dln := (criSize - pw.ObjsSize + pw.ObjSize - 1) / pw.ObjSize / 2
 		pw.CheckSizeCritical = dln + ln
 	}
-	return err
-
+	if err != nil {
+		return errors.Wrap(err, "pw.Flush")
+	}
+	return nil
 }
 
 func (pw *ParquetWriter) flushObjs() error {
@@ -269,7 +278,7 @@ func (pw *ParquetWriter) flushObjs() error {
 					case string:
 						errs[index] = errors.New(x)
 					case error:
-						errs[index] = x
+						errs[index] = errors.Wrap(x, "recovered")
 					default:
 						errs[index] = errors.New("unknown error")
 					}
@@ -305,7 +314,7 @@ func (pw *ParquetWriter) flushObjs() error {
 					}
 				}
 			} else {
-				errs[index] = err2
+				errs[index] = errors.Wrap(err2, "pw.MarshalFunc")
 			}
 
 		}(int(bgn), int(end), c)
@@ -315,7 +324,7 @@ func (pw *ParquetWriter) flushObjs() error {
 
 	for _, err2 := range errs {
 		if err2 != nil {
-			err = err2
+			err = errors.Wrap(err2, "err2")
 			break
 		}
 	}
@@ -335,7 +344,10 @@ func (pw *ParquetWriter) flushObjs() error {
 	}
 
 	pw.NumRows += int64(len(pw.Objs))
-	return err
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 //Flush the write buffer to parquet file
@@ -343,7 +355,7 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 	var err error
 
 	if err = pw.flushObjs(); err != nil {
-		return err
+		return errors.Wrap(err, "pw.flushObjs")
 	}
 
 	if (pw.Size+pw.ObjsSize >= pw.RowGroupSize || flag) && len(pw.PagesMapBuf) > 0 {
@@ -447,7 +459,7 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 
 				data := rowGroup.Chunks[k].Pages[l].RawData
 				if _, err = pw.PFile.Write(data); err != nil {
-					return err
+					return errors.Wrap(err, "pw.PFile.Write")
 				}
 				pw.Offset += int64(len(data))
 			}

@@ -1,10 +1,10 @@
 package reader
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/pkg/errors"
 	"github.com/sabey/parquet-go/common"
 	"github.com/sabey/parquet-go/layout"
 	"github.com/sabey/parquet-go/parquet"
@@ -34,7 +34,7 @@ type ColumnBufferType struct {
 func NewColumnBuffer(pFile source.ParquetFile, footer *parquet.FileMetaData, schemaHandler *schema.SchemaHandler, pathStr string) (*ColumnBufferType, error) {
 	newPFile, err := pFile.Open("")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "pFile.Open")
 	}
 	res := &ColumnBufferType{
 		PFile:            newPFile,
@@ -44,10 +44,13 @@ func NewColumnBuffer(pFile source.ParquetFile, footer *parquet.FileMetaData, sch
 		DataTableNumRows: -1,
 	}
 
-	if err = res.NextRowGroup(); err == io.EOF {
+	if err = res.NextRowGroup(); errors.Is(err, io.EOF) {
 		err = nil
 	}
-	return res, err
+	if err != nil {
+		return res, errors.Wrap(err, "res.NextRowGroup")
+	}
+	return res, nil
 }
 
 func (cbt *ColumnBufferType) NextRowGroup() error {
@@ -56,7 +59,7 @@ func (cbt *ColumnBufferType) NextRowGroup() error {
 	ln := int64(len(rowGroups))
 	if cbt.RowGroupIndex >= ln {
 		cbt.DataTableNumRows++ //very important, because DataTableNumRows is one smaller than real rows number
-		return io.EOF
+		return errors.Wrap(io.EOF, "io.EOF")
 	}
 
 	cbt.RowGroupIndex++
@@ -75,14 +78,14 @@ func (cbt *ColumnBufferType) NextRowGroup() error {
 	}
 
 	if i >= ln {
-		return fmt.Errorf("[NextRowGroup] Column not found: %v", cbt.PathStr)
+		return errors.Errorf("[NextRowGroup] Column not found: %v", cbt.PathStr)
 	}
 
 	cbt.ChunkHeader = columnChunks[i]
 	if columnChunks[i].FilePath != nil {
 		cbt.PFile.Close()
 		if cbt.PFile, err = cbt.PFile.Open(*columnChunks[i].FilePath); err != nil {
-			return err
+			return errors.Wrap(err, "cbt.PFile.Open")
 		}
 	}
 
@@ -108,7 +111,7 @@ func (cbt *ColumnBufferType) ReadPage() error {
 		page, numValues, numRows, err := layout.ReadPage(cbt.ThriftReader, cbt.SchemaHandler, cbt.ChunkHeader.MetaData)
 		if err != nil {
 			//data is nil and rl/dl=0, no pages in file
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				if cbt.DataTable == nil {
 					index := cbt.SchemaHandler.MapIndex[cbt.PathStr]
 					cbt.DataTable = layout.NewEmptyTable()
@@ -127,7 +130,7 @@ func (cbt *ColumnBufferType) ReadPage() error {
 				}
 			}
 
-			return err
+			return errors.Wrap(err, "layout.ReadPage")
 		}
 
 		if page.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
@@ -147,10 +150,13 @@ func (cbt *ColumnBufferType) ReadPage() error {
 		cbt.DataTableNumRows += numRows
 	} else {
 		if err := cbt.NextRowGroup(); err != nil {
-			return err
+			return errors.Wrap(err, "cbt.NextRowGroup")
 		}
 
-		return cbt.ReadPage()
+		if err := cbt.ReadPage(); err != nil {
+			return errors.Wrap(err, "cbt.ReadPage")
+		}
+		return nil
 	}
 
 	return nil
@@ -160,12 +166,12 @@ func (cbt *ColumnBufferType) ReadPageForSkip() (*layout.Page, error) {
 	if cbt.ChunkHeader != nil && cbt.ChunkHeader.MetaData != nil && cbt.ChunkReadValues < cbt.ChunkHeader.MetaData.NumValues {
 		page, err := layout.ReadPageRawData(cbt.ThriftReader, cbt.SchemaHandler, cbt.ChunkHeader.MetaData)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "layout.ReadPageRawData")
 		}
 
 		numValues, numRows, err := page.GetRLDLFromRawData(cbt.SchemaHandler)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "page.GetRLDLFromRawData")
 		}
 
 		if page.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
@@ -185,10 +191,14 @@ func (cbt *ColumnBufferType) ReadPageForSkip() (*layout.Page, error) {
 
 	} else {
 		if err := cbt.NextRowGroup(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "cbt.NextRowGroup")
 		}
 
-		return cbt.ReadPageForSkip()
+		p, err := cbt.ReadPageForSkip()
+		if err != nil {
+			return p, errors.Wrap(err, "cbt.ReadPageForSkip")
+		}
+		return p, nil
 	}
 }
 
